@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HACKER TERMINAL v2.0</title>
+
+<style>
+/* 1. BASE STYLE & MATRIX BACKGROUND */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Courier New', monospace;
+  background: black;
+  color: #00ff00;
+  overflow-x: hidden;
+  overflow-y: auto;
+  height: 100%;
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+/* 2. LOGIN PAGE */
+#loginPage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+input {
+  padding: 12px;
+  margin: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  width: 80%;
+  max-width: 300px;
+  font-size: 16px;
+  outline: none;
+}
+
+button {
+  padding: 12px 30px;
+  background: black;
+  border: 1px solid #00ff00;
+  color: #00ff00;
+  cursor: pointer;
+  margin: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: 0.3s;
+}
+
+button:active, button:hover {
+  background: #00ff00;
+  color: black;
+}
+
+/* 3. HACKER PAGE */
+#hackerPage {
+  display: none;
+  padding: 40px 10px;
+  text-align: center;
+  min-height: 100vh;
+}
+
+.logo { font-size: 60px; margin-bottom: 5px; }
+.title { font-size: 18px; margin-bottom: 20px; text-shadow: 0 0 10px #00ff00; }
+
+/* FAKE CONSOLE BOX */
+#fakeConsole {
+  margin: 20px auto;
+  width: 90%;
+  max-width: 450px;
+  height: 200px; /* สูงพอที่จะเห็นข้อความไหล */
+  border: 1px dashed #00ff00;
+  padding: 10px;
+  font-size: 13px;
+  background: rgba(0, 40, 0, 0.4);
+  overflow-y: auto;
+  text-align: left;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* PROGRESS BAR STYLE */
+#progressContainer {
+  width: 100%;
+  background-color: #002200;
+  border: 1px solid #00ff00;
+  margin-top: 10px;
+  height: 20px;
+  position: relative;
+  display: none;
+}
+
+#progressBar {
+  width: 0%;
+  height: 100%;
+  background-color: #00ff00;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+#percentText {
+  position: absolute;
+  width: 100%;
+  text-align: center;
+  top: 0;
+  left: 0;
+  color: black;
+  font-weight: bold;
+  line-height: 20px;
+  font-size: 11px;
+}
+
+.menu button {
+  display: block;
+  width: 80%;
+  max-width: 250px;
+  margin: 12px auto;
+  box-shadow: 0 0 8px #00ff00;
+}
+
+.blink { animation: blink-animation 1s steps(2, start) infinite; }
+@keyframes blink-animation { to { visibility: hidden; } }
+</style>
+</head>
+
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div id="loginPage">
+  <h2 style="text-shadow: 0 0 10px #00ff00;">RESTRICTED ACCESS</h2>
+  <input type="text" id="user" placeholder="USER_ID" autocomplete="off">
+  <input type="password" id="code" placeholder="ACCESS_CODE">
+  <button onclick="login()">AUTHORIZE</button>
+  <div id="msg"></div>
+</div>
+
+<div id="hackerPage">
+  <div class="logo">☠</div>
+  <div class="title">CORE SYSTEM BYPASS</div>
+
+  <div id="fakeConsole">
+    <div id="consoleOutput">
+      <span class="blink">></span> READY_FOR_COMMAND...
+    </div>
+    
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+      <div id="percentText">0%</div>
+    </div>
+  </div>
+
+  <div class="menu">
+    <button onclick="runOverride()">DATA EXTRACT</button>
+    <button onclick="runStatus()">EXFILTRATE</button>
+    <button onclick="runHack('SPOOFING IP: 182.21.0.254')">IP SPOOFER</button>
+    <button onclick="location.reload()">EXIT</button>
+  </div>
+</div>
+
+<script>
+// --- 1. MATRIX EFFECT ---
+const canvas = document.getElementById("matrix");
+const ctx = canvas.getContext("2d");
+let fontSize = 16;
+let columns;
+let drops = [];
+
+function initMatrix() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  columns = Math.floor(canvas.width / fontSize);
+  drops = [];
+  for (let x = 0; x < columns; x++) drops[x] = 1;
+}
+
+function drawMatrix() {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#00ff00";
+  ctx.font = fontSize + "px monospace";
+  for (let i = 0; i < drops.length; i++) {
+    const text = Math.floor(Math.random() * 2);
+    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+initMatrix();
+window.addEventListener('resize', initMatrix);
+setInterval(drawMatrix, 40);
+
+// --- 2. LOGIN SYSTEM ---
+function login() {
+  const user = document.getElementById("user").value;
+  const code = document.getElementById("code").value;
+  const msg = document.getElementById("msg");
+
+  if (user === "admin" && code === "999999") {
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("hackerPage").style.display = "block";
+    window.scrollTo(0,0);
+  } else {
+    msg.innerHTML = "ACCESS DENIED";
+    msg.style.color = "red";
+    if(navigator.vibrate) navigator.vibrate(200);
+  }
+}
+
+// --- 3. HACKING FUNCTIONS ---
+
+const consoleBox = document.getElementById("fakeConsole");
+const consoleOutput = document.getElementById("consoleOutput");
+const progressContainer = document.getElementById("progressContainer");
+const progressBar = document.getElementById("progressBar");
+const percentText = document.getElementById("percentText");
+
+// ฟังก์ชันสำหรับข้อความปกติ
+function runHack(text) {
+  progressContainer.style.display = "none";
+  consoleOutput.innerHTML = `<span class="blink">></span> ${text}`;
+}
+
+// ฟังก์ชันปุ่ม OVERRIDE (ดึงข้อมูลปลอมรัวๆ)
+async function runOverride() {
+  progressContainer.style.display = "none";
+  consoleOutput.innerHTML = ""; // ล้างจอเพื่อเริ่มไหล
+  
+  const fakePaths = [
+    "FETCHING: /root/private/passwords.db", "DUMPING: DCIM/Camera/IMG_08.png",
+    "DECRYPTING: WhatsApp/Backups/msg.enc", "ACCESSING: Browser_History/SQLite",
+    "EXTRACTING: system/config/wifi_keys.xml", "SCANNING: /dev/block/sda1",
+    "UPLOADING: metadata_temp_v1.zip",
+     "STOLEN: cookie_session_id_449",
+    "FETCHING: /root/private/passwords.db", "DUMPING: DCIM/Camera/IMG_08.png",
+    "DECRYPTING: WhatsApp/Backups/msg.enc", "ACCESSING: Browser_History/SQLite",
+    "EXTRACTING: system/config/wifi_keys.xml", "SCANNING: /dev/block/sda1",
+    "UPLOADING: metadata_temp_v1.zip", "STOLEN: cookie_session_id_449",
+    "FETCHING: /root/private/passwords.db", "DUMPING: DCIM/Camera/IMG_08.png",
+    "DECRYPTING: WhatsApp/Backups/msg.enc", "ACCESSING: Browser_History/SQLite",
+    "EXTRACTING: system/config/wifi_keys.xml", "SCANNING: /dev/block/sda1",
+    "UPLOADING: metadata_temp_v1.zip",
+     "STOLEN: cookie_session_id_449",
+    "FETCHING: /root/private/passwords.db", "DUMPING: DCIM/Camera/IMG_08.png",
+    "DECRYPTING: WhatsApp/Backups/msg.enc", "ACCESSING: Browser_History/SQLite",
+    "EXTRACTING: system/config/wifi_keys.xml", "SCANNING: /dev/block/sda1",
+    "UPLOADING: metadata_temp_v1.zip", "STOLEN: cookie_session_id_449","FETCHING: /root/private/passwords.db", "DUMPING: DCIM/Camera/IMG_08.png",
+    "DECRYPTING: WhatsApp/Backups/msg.enc", "ACCESSING: Browser_History/SQLite",
+    "EXTRACTING: system/config/wifi_keys.xml", "SCANNING: /dev/block/sda1",
+    "UPLOADING: metadata_temp_v1.zip",
+     "STOLEN: cookie_session_id_449",
+    "FETCHING: /root/private/passwords.db", "DUMPING: DCIM/Camera/IMG_08.png",
+    "DECRYPTING: WhatsApp/Backups/msg.enc", "ACCESSING: Browser_History/SQLite",
+    "EXTRACTING: system/config/wifi_keys.xml", "SCANNING: /dev/block/sda1",
+    "UPLOADING: metadata_temp_v1.zip", "STOLEN: cookie_session_id_449",
+   
+  ];
+
+  for (let i = 0; i < 850; i++) {
+    let line = document.createElement("div");
+    let randomPath = fakePaths[Math.floor(Math.random() * fakePaths.length)];
+    line.innerHTML = `<span style='color:white;'>[OK]</span> ${randomPath} ... ${Math.random().toString(16).slice(2,8)}`;
+    consoleOutput.appendChild(line);
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+    await new Promise(r => setTimeout(r, 60)); // ความเร็วข้อความไหล
+  }
+  
+  consoleOutput.innerHTML += "<div style='background:red; color:white; margin-top:5px; text-align:center;'>--- DATA EXTRACTION COMPLETE ---</div>";
+  consoleBox.scrollTop = consoleBox.scrollHeight;
+}
+
+// ฟังก์ชันปุ่ม STATUS (แถบดาวน์โหลด)
+async function runStatus() {
+  consoleOutput.innerHTML = "<div><span class='blink'>></span> เชื่อมต่อ SERVER หลัก... [SUCCESS]</div>";
+  await new Promise(r => setTimeout(r, 1000));
+  consoleOutput.innerHTML += "<div><span class='blink'>></span> กำลังตรวจสอบช่องสัญญาณความปลอดภัย... [DONE]</div>";
+  await new Promise(r => setTimeout(r, 800));
+  consoleOutput.innerHTML += "<div><span class='blink'>></span> เริ่มการโอนถ่ายข้อมูลไปยัง SERVER สำรอง...</div>";
+  
+  progressContainer.style.display = "block";
+  progressBar.style.width = "0%";
+  percentText.innerText = "0%";
+
+  for (let i = 0; i <= 100; i++) {
+    progressBar.style.width = i + "%";
+    percentText.innerText = i + "%";
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+
+    // --- สูตรคำนวณความหน่วงให้สมจริง ---
+    let delay;
+    if (i < 30) {
+      delay = Math.floor(Math.random() * 80) + 40; // ช่วงแรกวิ่งปกติ
+    } else if (i >= 30 && i < 45) {
+      delay = Math.floor(Math.random() * 400) + 200; // จังหวะเน็ตสะดุด
+    } else if (i >= 85 && i < 99) {
+      delay = Math.floor(Math.random() * 600) + 300; // ช่วงท้ายเริ่มช้า
+    } else if (i === 99) {
+      delay = 2500; // ค้างที่ 99% นานๆ ให้เหมือนของจริง
+    } else {
+      delay = Math.floor(Math.random() * 40) + 10; // ช่วงที่วิ่งเร็วปกติ
+    }
+
+    await new Promise(r => setTimeout(r, delay));
+  }
+
+  consoleOutput.innerHTML += "<div style='color:white; background:blue; margin-top:10px; padding:5px; font-weight:bold; text-align:center;'>[SUCCESS] DATA TRANSFER COMPLETED</div>";
+  consoleBox.scrollTop = consoleBox.scrollHeight;
+}
+</script>
+
+</body>
+</html>
